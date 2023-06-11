@@ -1,7 +1,6 @@
 pipeline {
     environment {
         KUBECONFIG = credentials('kubeconfig-prod-k8s')
-        githubCredential = 'GitHub-Creds'
     }  
     agent any
     
