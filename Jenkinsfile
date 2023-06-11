@@ -1,18 +1,26 @@
 pipeline {
-  agent any
-  stages {
-    stage('Build-Image') {
-      steps {
-        sh 'docker build -t nitesh99sharma/jenkins-docker-kubectl":$BUILD_NUMBER" .'
-      }
-    }
-      stage ('Push-Image') {
-        steps {
-        withDockerRegistry([ credentialsId: "dockerhub_id", url: "" ]) {
-          sh 'docker push nitesh99sharma/jenkins-docker-kubectl":$BUILD_NUMBER"'
-
+    environment {
+        KUBECONFIG = credentials('kubeconfig-aks')
+        githubCredential = 'GitHub-Creds'
+    }  
+    agent any
+    
+    stages {
+        stage('Deploy to Kubernetes AKS') {
+            steps {
+                script {
+                    // Print the contents of the workspace directory
+                    sh 'ls -R'
+                    
+                    // Rest of your deployment steps
+                    withCredentials([file(credentialsId: 'kubeconfig-aks', variable: 'KUBECONFIG')]) {
+                        sh "kubectl config view --kubeconfig=$KUBECONFIG" // View Kubernetes configuration
+                        sh "kubectl get namespaces --kubeconfig=$KUBECONFIG" // Get Kubernetes namespaces
+                        sh "kubectl apply -f deployment.yaml --kubeconfig=$KUBECONFIG" // Apply deployment configuration
+                        sh "kubectl apply -f service.yaml --kubeconfig=$KUBECONFIG" // Apply service configuration
+                    }
+                }
+            }
         }
-      }
     }
-  }
 }
